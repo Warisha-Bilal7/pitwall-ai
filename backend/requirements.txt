@@ -1,0 +1,37 @@
+# Web framework
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+
+# Database
+sqlalchemy==2.0.36
+asyncpg==0.30.0
+alembic==1.14.0
+pgvector==0.3.6
+
+# Redis
+redis==5.2.0
+
+# HTTP client (for OpenF1 API)
+httpx==0.28.0
+
+# Data processing
+pandas==2.2.3
+numpy==2.1.3
+
+# AI / LLM (we'll use these in Phase 3)
+langchain==0.3.9
+langchain-openai==0.2.10
+langgraph==0.2.56
+openai==1.57.0
+
+# Embeddings
+sentence-transformers==3.3.1
+
+# Environment
+python-dotenv==1.0.1
+pydantic-settings==2.6.1
+pydantic==2.10.3
+
+# Dev
+pytest==8.3.4
+httpx==0.28.0
