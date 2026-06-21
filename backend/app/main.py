@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import init_db
 from app.config import get_settings
+from app.api.routes import router
 
 settings = get_settings()
 
@@ -32,7 +33,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+app.include_router(router, prefix="/api/v1")
 
 @app.get("/health")
 async def health():

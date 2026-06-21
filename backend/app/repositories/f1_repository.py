@@ -109,6 +109,11 @@ async def insert_laps(
     driver_map: dict[int, Driver],
 ) -> int:
     """Insert laps — skips any lap that already exists for this session+driver+lap_number."""
+    result = await db.execute(
+        select(Lap.driver_number, Lap.lap_number).where(Lap.session_id == session_id)
+    )
+    existing_laps = {(row[0], row[1]) for row in result.all()}
+
     inserted = 0
     for data in laps_data:
         driver_number = data.get("driver_number")
@@ -117,14 +122,7 @@ async def insert_laps(
             continue
 
         # skip if already exists
-        result = await db.execute(
-            select(Lap).where(
-                Lap.session_id == session_id,
-                Lap.driver_number == driver_number,
-                Lap.lap_number == lap_number,
-            )
-        )
-        if result.scalar_one_or_none():
+        if (driver_number, lap_number) in existing_laps:
             continue
 
         driver = driver_map.get(driver_number)
@@ -148,6 +146,7 @@ async def insert_laps(
             date_start=_parse_dt(data.get("date_start")),
         )
         db.add(lap)
+        existing_laps.add((driver_number, lap_number))
         inserted += 1
     await db.flush()
     return inserted
@@ -158,6 +157,11 @@ async def insert_laps(
 async def insert_pit_stops(
     db: AsyncSession, pits_data: list[dict], session_id: uuid.UUID
 ) -> int:
+    result = await db.execute(
+        select(PitStop.driver_number, PitStop.lap_number).where(PitStop.session_id == session_id)
+    )
+    existing_pits = {(row[0], row[1]) for row in result.all()}
+
     inserted = 0
     for data in pits_data:
         driver_number = data.get("driver_number")
@@ -165,14 +169,7 @@ async def insert_pit_stops(
         if not driver_number:
             continue
 
-        result = await db.execute(
-            select(PitStop).where(
-                PitStop.session_id == session_id,
-                PitStop.driver_number == driver_number,
-                PitStop.lap_number == lap_number,
-            )
-        )
-        if result.scalar_one_or_none():
+        if (driver_number, lap_number) in existing_pits:
             continue
 
         pit = PitStop(
@@ -184,6 +181,7 @@ async def insert_pit_stops(
             date=_parse_dt(data.get("date")),
         )
         db.add(pit)
+        existing_pits.add((driver_number, lap_number))
         inserted += 1
     await db.flush()
     return inserted
@@ -196,9 +194,10 @@ def _parse_dt(value) -> Optional[datetime]:
     if not value:
         return None
     if isinstance(value, datetime):
-        return value
+        return value.replace(tzinfo=None)
     try:
         # OpenF1 returns strings like "2024-07-07T13:00:00+00:00"
-        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        return dt.replace(tzinfo=None)
     except (ValueError, TypeError):
         return None

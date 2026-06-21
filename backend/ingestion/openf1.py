@@ -47,12 +47,15 @@ class OpenF1Client:
 
     async def get_sessions(
         self,
+        session_key: Optional[int] = None,
         meeting_key: Optional[int] = None,
         session_type: Optional[str] = None,
         year: Optional[int] = None,
     ) -> list[dict]:
         """Fetch sessions. Filter by meeting, type ('Race','Practice','Qualifying'), or year."""
         params = {}
+        if session_key:
+            params["session_key"] = session_key
         if meeting_key:
             params["meeting_key"] = meeting_key
         if session_type:
