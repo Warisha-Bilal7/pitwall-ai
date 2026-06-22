@@ -11,6 +11,8 @@ class Settings(BaseSettings):
 
     # OpenAI
     openai_api_key: str = ""
+# Groq
+    groq_api_key: str = ""
 
     # App
     app_env: str = "development"
