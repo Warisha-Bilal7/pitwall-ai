@@ -1,0 +1,17 @@
+# Environments
+.env
+backend/.env
+.venv/
+backend/venv/
+venv/
+
+# Python cache and temporary files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+
+# IDE files
+.vscode/
+.idea/
