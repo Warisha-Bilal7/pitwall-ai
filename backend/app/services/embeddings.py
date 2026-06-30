@@ -11,7 +11,7 @@ _model: SentenceTransformer | None = None
 def get_embedding_model() -> SentenceTransformer:
     global _model
     if _model is None:
-        print("  🧠 Loading embedding model (all-MiniLM-L6-v2)...")
+        print("  [Embeddings] Loading embedding model (all-MiniLM-L6-v2)...")
         _model = SentenceTransformer("all-MiniLM-L6-v2")
     return _model
 

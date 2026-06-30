@@ -24,7 +24,7 @@ def _build_sections(state: AgentState) -> str:
     return "\n\n".join(sections)
 
 
-async def aggregator_node(state: AgentState) -> AgentState:
+async def aggregator_node(state: AgentState) -> dict:
     """
     LangGraph node: combines whichever specialist outputs are present
     into a single final_answer, in a consistent race-engineer voice.
@@ -32,14 +32,12 @@ async def aggregator_node(state: AgentState) -> AgentState:
     sections = _build_sections(state)
 
     if not sections:
-        state["final_answer"] = "No analysis was available to answer that question."
-        return state
+        return {"final_answer": "No analysis was available to answer that question."}
 
     llm = get_llm(temperature=0.3)
     prompt = AGGREGATION_PROMPT.format(query=state["query"], sections=sections)
     response = llm.invoke(prompt)
 
-    state["final_answer"] = response.content
     print(f"  Aggregator produced final answer ({len(response.content)} chars)")
 
-    return state
+    return {"final_answer": response.content}

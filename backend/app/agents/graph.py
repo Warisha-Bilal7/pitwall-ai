@@ -7,15 +7,17 @@ from app.agents.strategy_agent import strategy_agent
 from app.agents.rag_agent import rag_agent
 from app.agents.aggregator import aggregator_node
 
-
 def route_to_agents(state: AgentState):
     """
-    Conditional edge after supervisor: fan out to every agent in state['route']
-    using Send, so multiple agents can run in the same graph execution.
+    Conditional edge after supervisor: fan out to every agent in state['route'].
+    Each Send carries a *fresh copy* of shared read-only fields, but the
+    agent functions only ever set ONE output key each, so there's no
+    concurrent-write collision on the *_output fields.
+    The remaining collision (query, session_id, session_key, route all being
+    written identically by every branch) is solved with reducers below.
     """
     route = state.get("route") or ["rag"]
     return [Send(agent_name, state) for agent_name in route]
-
 
 def build_graph():
     graph = StateGraph(AgentState)

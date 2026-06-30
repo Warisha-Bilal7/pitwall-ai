@@ -101,7 +101,7 @@ def _compute_pit_stop_outliers(pit_stops: list[PitStop]) -> dict:
     }
 
 
-async def telemetry_agent(state: AgentState) -> AgentState:
+async def telemetry_agent(state: AgentState) -> dict:
     """
     LangGraph node: analyzes pace and pit stop data for the driver(s)
     mentioned in the query, then asks the LLM to phrase the findings
@@ -114,11 +114,12 @@ async def telemetry_agent(state: AgentState) -> AgentState:
     driver_number = _find_driver_number_in_query(query, drivers)
 
     if driver_number is None:
-        state["telemetry_output"] = (
-            "I couldn't identify which driver you're asking about. "
-            "Could you mention them by name (e.g. 'Verstappen' or 'NOR')?"
-        )
-        return state
+        return {
+            "telemetry_output": (
+                "I couldn't identify which driver you're asking about. "
+                "Could you mention them by name (e.g. 'Verstappen' or 'NOR')?"
+            )
+        }
 
     driver = next(d for d in drivers if d.driver_number == driver_number)
     laps = await _get_driver_laps(session_id, driver_number)
@@ -146,5 +147,4 @@ traffic, a mistake, etc.) but be clear when you're speculating vs stating a fact
 the data. Keep the answer to 3-5 sentences."""
 
     response = llm.invoke(prompt)
-    state["telemetry_output"] = response.content
-    return state
+    return {"telemetry_output": response.content}

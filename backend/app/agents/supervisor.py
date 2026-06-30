@@ -43,7 +43,7 @@ def _parse_route(response_text: str) -> list[str]:
         return ["rag"]
 
 
-async def supervisor_node(state: AgentState) -> AgentState:
+async def supervisor_node(state: AgentState) -> dict:
     """
     LangGraph node: classifies the query and sets state["route"].
     Does NOT call any specialist agents -- just decides who should.
@@ -55,5 +55,4 @@ async def supervisor_node(state: AgentState) -> AgentState:
 
     print(f"  Supervisor routed to: {route}")
 
-    state["route"] = route
-    return state
+    return {"route": route}

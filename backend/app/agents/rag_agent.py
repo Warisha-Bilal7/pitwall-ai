@@ -104,7 +104,7 @@ async def _run_sql_fast_path(query: str, session_id: uuid.UUID) -> str | None:
 
 # ── Main RAG agent node ───────────────────────────────────────────────────────
 
-async def rag_agent(state: AgentState) -> AgentState:
+async def rag_agent(state: AgentState) -> dict:
     """
     LangGraph node: answers questions using retrieved race knowledge.
 
@@ -130,11 +130,12 @@ async def rag_agent(state: AgentState) -> AgentState:
                 db, query=query, session_key=session_key, limit=5
             )
         if not docs:
-            state["rag_output"] = (
-                "I don't have any indexed race documents for this session yet. "
-                "Try running the document build pipeline first."
-            )
-            return state
+            return {
+                "rag_output": (
+                    "I don't have any indexed race documents for this session yet. "
+                    "Try running the document build pipeline first."
+                )
+            }
         context = "\n\n".join(f"[{d.doc_type}] {d.content}" for d in docs)
 
     llm = get_llm(temperature=0.2)
@@ -151,5 +152,4 @@ driver names, teams, lap numbers and times. If the context doesn't fully answer 
 question, say so explicitly rather than guessing. Keep the answer to 3-5 sentences."""
 
     response = llm.invoke(prompt)
-    state["rag_output"] = response.content
-    return state
+    return {"rag_output": response.content}

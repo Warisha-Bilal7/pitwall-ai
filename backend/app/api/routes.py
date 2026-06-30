@@ -5,6 +5,8 @@ from app.database import get_db
 from app.models.f1_models import Session, Driver, Lap, PitStop, Meeting
 from typing import Optional
 import uuid
+from pydantic import BaseModel
+from app.agents.graph import build_graph
 
 router = APIRouter()
 
@@ -158,3 +160,68 @@ async def trigger_ingest(session_key: int, db: AsyncSession = Depends(get_db)):
         return {"status": "ok", "session_key": session_key}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Multi-Agent Query ─────────────────────────────────────────────────────────
+
+_graph = build_graph()
+
+
+class QueryRequest(BaseModel):
+    query: str
+    session_id: Optional[str] = None
+    session_key: Optional[int] = None
+
+
+class QueryResponse(BaseModel):
+    route: list[str]
+    answer: str
+
+
+@router.post("/query", response_model=QueryResponse)
+async def query_race(request: QueryRequest, db: AsyncSession = Depends(get_db)):
+    """
+    Submits a query to the race intelligence system.
+    If session_id or session_key is not provided, defaults to the most recent session.
+    """
+    session_id = request.session_id
+    session_key = request.session_key
+
+    # Resolve session_id and session_key if either is missing
+    if not session_id or not session_key:
+        if session_id:
+            stmt = select(Session).where(Session.id == uuid.UUID(session_id))
+            result = await db.execute(stmt)
+            session = result.scalar_one_or_none()
+            if not session:
+                raise HTTPException(status_code=404, detail=f"Session with ID {session_id} not found.")
+            session_key = session.session_key
+        elif session_key:
+            stmt = select(Session).where(Session.session_key == session_key)
+            result = await db.execute(stmt)
+            session = result.scalar_one_or_none()
+            if not session:
+                raise HTTPException(status_code=404, detail=f"Session with key {session_key} not found.")
+            session_id = str(session.id)
+        else:
+            stmt = select(Session).order_by(Session.date_start.desc()).limit(1)
+            result = await db.execute(stmt)
+            session = result.scalar_one_or_none()
+            if not session:
+                raise HTTPException(status_code=404, detail="No session found in database.")
+            session_id = str(session.id)
+            session_key = session.session_key
+
+    state = {
+        "query": request.query,
+        "session_id": str(session_id),
+        "session_key": int(session_key),
+        "route": None,
+        "strategy_output": None,
+        "telemetry_output": None,
+        "rag_output": None,
+        "final_answer": None,
+    }
+
+    result = await _graph.ainvoke(state)
+    return QueryResponse(route=result["route"], answer=result["final_answer"])

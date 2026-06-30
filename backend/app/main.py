@@ -10,14 +10,14 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("🚀 PITWALL·AI starting up...")
+    print("  [App] PITWALL·AI starting up...")
     try:
         await init_db()
     except Exception as e:
-        print(f"⚠️  Database not available yet: {e}")
+        print(f"  [App] WARNING: Database not available yet: {e}")
         print("   Start Docker and run again to initialise tables.")
     yield
-    print("🛑 PITWALL·AI shutting down...")
+    print("  [App] PITWALL·AI shutting down...")
 
 app = FastAPI(
     title="PITWALL·AI",

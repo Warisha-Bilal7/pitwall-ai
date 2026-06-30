@@ -78,7 +78,7 @@ def _compute_stints(laps: list[Lap], pit_stops: list[PitStop]) -> list[dict]:
     return stints
 
 
-async def strategy_agent(state: AgentState) -> AgentState:
+async def strategy_agent(state: AgentState) -> dict:
     """
     LangGraph node: computes stint breakdown and pit timing for the driver(s)
     in the query, then asks the LLM to reason about strategy (pit windows,
@@ -91,11 +91,12 @@ async def strategy_agent(state: AgentState) -> AgentState:
     driver_number = _find_driver_number_in_query(query, drivers)
 
     if driver_number is None:
-        state["strategy_output"] = (
-            "I couldn't identify which driver you're asking about for strategy analysis. "
-            "Could you mention them by name?"
-        )
-        return state
+        return {
+            "strategy_output": (
+                "I couldn't identify which driver you're asking about for strategy analysis. "
+                "Could you mention them by name?"
+            )
+        }
 
     driver = next(d for d in drivers if d.driver_number == driver_number)
     laps = await _get_driver_laps(session_id, driver_number)
@@ -126,5 +127,4 @@ about what's directly supported by the data vs. your strategic interpretation.
 Keep the answer to 3-5 sentences."""
 
     response = llm.invoke(prompt)
-    state["strategy_output"] = response.content
-    return state
+    return {"strategy_output": response.content}
