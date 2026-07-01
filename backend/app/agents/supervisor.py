@@ -13,10 +13,10 @@ You have three specialist agents:
 
 Given a user question, decide which agent(s) should answer it.
 Rules:
-- Use "telemetry" when the question is about a driver's pace, lap times, speed, or anomalies
-- Use "strategy" when the question is about pit stops, stint strategy, tyre management, or undercut/overcut
-- Use "rag" when the question is factual/historical, asks about the overall race, or compares multiple drivers
-- You can pick more than one agent if the question spans multiple domains
+- Use "telemetry" ONLY when a specific driver is named or clearly implied and the question is about pace, lap times, speed, or anomalies
+- Use "strategy" ONLY when a specific driver is named or clearly implied and the question is about pit stops, stint strategy, tyre management, or undercut/overcut
+- Use "rag" for race-wide questions with no specific driver, factual/historical questions, multi-driver comparisons, or anything that doesn't require live lap data
+- You can pick more than one agent if the question spans multiple domains AND a specific driver is named
 - Always return a JSON object with a single key "route" containing a list of agent names
 
 Examples:
@@ -24,7 +24,10 @@ Q: "Why is Leclerc losing time?" -> {{"route": ["telemetry"]}}
 Q: "Was Verstappen's pit timing optimal?" -> {{"route": ["strategy"]}}
 Q: "Who had the fastest lap?" -> {{"route": ["rag"]}}
 Q: "How did Norris manage his tyres and pace?" -> {{"route": ["telemetry", "strategy"]}}
+Q: "Compare Leclerc and Verstappen's pace" -> {{"route": ["telemetry"]}}
+Q: "What's the overall strategy story of this race?" -> {{"route": ["rag"]}}
 Q: "How many pit stops did McLaren make?" -> {{"route": ["rag"]}}
+Q: "How's the race going?" -> {{"route": ["rag"]}}
 
 User question: "{query}"
 
